@@ -4,7 +4,7 @@ precision highp float;
 in vec2 v_uv;
 uniform vec2 u_resolution;
 uniform sampler2D u_webcam;
-uniform float u_gridLength;
+uniform int u_nPasses;
 uniform float u_stripLength;
 
 out vec4 fragColor;
@@ -63,11 +63,13 @@ void main() {
     
     // Thinking in terms of the image, you’d want to start by correcting the aspect ratio, then mirroring the image,
     // then rearranging the strips. But since we’re operating in UV space, we need to work backwards.
-    uv = rearrangeStripsY(uv, vec2(1.0, u_stripLength));
-    uv = rearrangeStrips(uv, vec2(u_stripLength, 1.0));
-    uv = mirror(uv, u_gridLength);
-    uv = correctAspectRatio(uv, u_resolution, vec2(textureSize(u_webcam, 0)));
     uv = vec2(uv.x, 1.0 - uv.y);
+    for (int i = 0; i < u_nPasses; ++i) {
+        uv = rearrangeStripsY(uv, vec2(1.0, u_stripLength));
+        uv = rearrangeStrips(uv, vec2(u_stripLength, 1.0));
+    }
+    uv = mirror(uv, pow(2.0, float(u_nPasses)));
+    uv = correctAspectRatio(uv, u_resolution, vec2(textureSize(u_webcam, 0)));
 
     fragColor = texture(u_webcam, uv);
 }

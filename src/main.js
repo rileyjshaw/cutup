@@ -2,17 +2,8 @@ import ShaderPad from 'shaderpad';
 import handleTouch from './handleTouch';
 import fragmentShaderSrc from './fragmentShader.glsl';
 
-const MIN_STRIP_LENGTH = 8;
-
-async function getAvailableCameras() {
-	try {
-		const devices = await navigator.mediaDevices.enumerateDevices();
-		return devices.filter(device => device.kind === 'videoinput');
-	} catch (error) {
-		console.error('Error enumerating devices:', error);
-		return [];
-	}
-}
+const MIN_STRIP_LENGTH = 2;
+const MAX_N_PASSES = 8;
 
 async function getWebcamStream(facingMode = 'user') {
 	const video = document.createElement('video');
@@ -41,6 +32,7 @@ async function main() {
 	let currentFacingMode = 'user'; // Selfie camera.
 	let video = await getWebcamStream(currentFacingMode);
 	let stripLength = 32;
+	let nPasses = 1;
 	let isPlaying = true;
 
 	document.body.appendChild(video); // HACK: Desktop Safari won’t update the shader otherwise.
@@ -56,7 +48,7 @@ async function main() {
 
 	const shader = new ShaderPad(fragmentShaderSrc, { canvas: outputCanvas });
 
-	shader.initializeUniform('u_gridLength', 'float', 2);
+	shader.initializeUniform('u_nPasses', 'int', nPasses);
 	shader.initializeUniform('u_stripLength', 'float', stripLength);
 	shader.initializeTexture('u_webcam', video);
 
@@ -79,14 +71,20 @@ async function main() {
 	document.addEventListener('keydown', e => {
 		switch (e.key) {
 			case 'ArrowUp':
-			case 'ArrowRight':
 				stripLength += 2;
 				shader.updateUniforms({ u_stripLength: stripLength });
 				break;
 			case 'ArrowDown':
-			case 'ArrowLeft':
 				stripLength = Math.max(MIN_STRIP_LENGTH, stripLength - 2);
 				shader.updateUniforms({ u_stripLength: stripLength });
+				break;
+			case 'ArrowRight':
+				nPasses = Math.min(MAX_N_PASSES, nPasses + 1);
+				shader.updateUniforms({ u_nPasses: nPasses });
+				break;
+			case 'ArrowLeft':
+				nPasses = Math.max(1, nPasses - 1);
+				shader.updateUniforms({ u_nPasses: nPasses });
 				break;
 			case ' ':
 				isPlaying = !isPlaying;
@@ -99,8 +97,13 @@ async function main() {
 	});
 
 	handleTouch(document.body, (direction, diff) => {
-		stripLength = Math.max(MIN_STRIP_LENGTH, stripLength + Math.sign(diff) * 2 * (direction === 'x' ? 1 : -1));
-		shader.updateUniforms({ u_stripLength: stripLength });
+		if (direction === 'x') {
+			nPasses = Math.max(1, Math.min(8, nPasses + Math.sign(diff) / 16));
+			shader.updateUniforms({ u_nPasses: nPasses });
+		} else {
+			stripLength = Math.max(MIN_STRIP_LENGTH, stripLength - Math.sign(diff) * 2);
+			shader.updateUniforms({ u_stripLength: stripLength });
+		}
 	});
 
 	// Double-tap to switch camera (300ms threshold).
