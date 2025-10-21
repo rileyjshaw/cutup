@@ -97,6 +97,7 @@ async function main() {
 	});
 
 	handleTouch(document.body, (direction, diff) => {
+		if (diff > 16) lastTapTime = 0;
 		if (direction === 'x') {
 			nPasses = Math.max(1, Math.min(8, nPasses + Math.sign(diff) / 8));
 			shader.updateUniforms({ u_nPasses: nPasses });
