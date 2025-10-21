@@ -59,7 +59,7 @@ async function main() {
 				isPlaying ? play() : shader.pause();
 				break;
 			case 's':
-				shader.save('cuts');
+				shader.save('cutup');
 				break;
 		}
 	});

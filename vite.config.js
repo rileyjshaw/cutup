@@ -2,7 +2,7 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 import glsl from 'vite-plugin-glsl';
 
 export default {
-	base: '/cuts/',
+	base: '/cutup/',
 	plugins: [basicSsl(), glsl()],
 	server: {
 		https: true,
