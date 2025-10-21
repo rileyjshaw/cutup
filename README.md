@@ -2,11 +2,11 @@
 
 ## Controls
 
--   Arrow/swipe up/right: Increase number of subdivisions.
--   Arrow/swipe down/left: Decrease number of subdivisions.
--   Space: Pause/play webcam feed.
+-   Arrow/swipe up/down: Increase/decrease number of subdivisions.
+-   Arrow/swipe right/left: Increase/decrease number of reflections.
+-   Space: Pause/play.
 -   s: Save the current frame as a PNG.
--   Double-tap on mobile: switch camera.
+-   Double-tap: switch camera direction.
 
 ## Credit
 
