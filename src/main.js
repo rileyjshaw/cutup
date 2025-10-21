@@ -25,7 +25,6 @@ async function getWebcamStream(facingMode = 'user') {
 		const stream = await navigator.mediaDevices.getUserMedia(constraints);
 		video.srcObject = stream;
 		await new Promise(resolve => (video.onloadedmetadata = resolve));
-		document.body.appendChild(video);
 	} catch (error) {
 		console.error('Error accessing webcam:', error);
 		throw error;
@@ -36,18 +35,20 @@ async function getWebcamStream(facingMode = 'user') {
 
 async function main() {
 	// State.
-	let currentFacingMode = 'user'; // Start with front camera
+	let currentFacingMode = 'user'; // Selfie camera.
 	let video = await getWebcamStream(currentFacingMode);
 	let stripLength = 32;
 	let isPlaying = true;
+
+	document.body.appendChild(video); // HACK: Desktop Safari won’t update the shader otherwise.
 
 	const outputCanvas = document.createElement('canvas');
 	outputCanvas.width = video.videoWidth;
 	outputCanvas.height = video.videoHeight;
 	outputCanvas.style.position = 'fixed';
 	outputCanvas.style.inset = '0';
-	outputCanvas.style.width = '100vw';
-	outputCanvas.style.height = '100vh';
+	outputCanvas.style.width = '100dvw';
+	outputCanvas.style.height = '100dvh';
 	document.body.appendChild(outputCanvas);
 
 	const shader = new ShaderPad(fragmentShaderSrc, { canvas: outputCanvas });
@@ -61,25 +62,14 @@ async function main() {
 			video.srcObject.getTracks().forEach(track => track.stop());
 		}
 
-		currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-
+		const newFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
 		try {
-			video = await getWebcamStream(currentFacingMode);
-			outputCanvas.width = video.videoWidth;
-			outputCanvas.height = video.videoHeight;
+			video = await getWebcamStream(newFacingMode);
 			shader.updateTextures({ u_webcam: video });
+			currentFacingMode = newFacingMode;
+			outputCanvas.style.transform = newFacingMode === 'environment' ? 'scaleX(-1)' : '';
 		} catch (error) {
 			console.error('Failed to switch camera:', error);
-			// Switch back to the original mode.
-			currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-			try {
-				video = await getWebcamStream(currentFacingMode);
-				outputCanvas.width = video.videoWidth;
-				outputCanvas.height = video.videoHeight;
-				shader.updateTextures({ u_webcam: video });
-			} catch (fallbackError) {
-				console.error('Camera switching failed completely:', fallbackError);
-			}
 		}
 	}
 
@@ -126,8 +116,6 @@ async function main() {
 		});
 	}
 	play();
-
-	shader.onResize = shader.reset;
 }
 
 document.addEventListener('DOMContentLoaded', main);
