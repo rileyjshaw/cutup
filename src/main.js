@@ -35,7 +35,7 @@ async function main() {
 	const shader = new ShaderPad(fragmentShaderSrc, { canvas: outputCanvas });
 
 	// State.
-	let stripLength = 100;
+	let stripLength = 32;
 	let isPlaying = true;
 
 	shader.initializeUniform('u_gridLength', 'float', 2);
