@@ -14,13 +14,13 @@ async function getAvailableCameras() {
 	}
 }
 
-async function getWebcamStream(deviceId = null) {
+async function getWebcamStream(facingMode = 'user') {
 	const video = document.createElement('video');
 	video.autoplay = video.playsInline = true;
 
 	try {
 		const constraints = {
-			video: deviceId ? { deviceId: { exact: deviceId } } : true,
+			video: facingMode ? { facingMode } : true,
 		};
 		const stream = await navigator.mediaDevices.getUserMedia(constraints);
 		video.srcObject = stream;
@@ -35,11 +35,9 @@ async function getWebcamStream(deviceId = null) {
 }
 
 async function main() {
-	const cameras = await getAvailableCameras();
-
 	// State.
-	let currentCameraIndex = 0;
-	let video = await getWebcamStream();
+	let currentFacingMode = 'user'; // Start with front camera
+	let video = await getWebcamStream(currentFacingMode);
 	let stripLength = 32;
 	let isPlaying = true;
 
@@ -59,17 +57,30 @@ async function main() {
 	shader.initializeTexture('u_webcam', video);
 
 	async function switchCamera() {
-		if (cameras.length <= 1) return;
-
 		if (video.srcObject) {
 			video.srcObject.getTracks().forEach(track => track.stop());
 		}
 
-		currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
-		video = await getWebcamStream(cameras[currentCameraIndex].deviceId);
-		outputCanvas.width = video.videoWidth;
-		outputCanvas.height = video.videoHeight;
-		shader.updateTextures({ u_webcam: video });
+		currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+
+		try {
+			video = await getWebcamStream(currentFacingMode);
+			outputCanvas.width = video.videoWidth;
+			outputCanvas.height = video.videoHeight;
+			shader.updateTextures({ u_webcam: video });
+		} catch (error) {
+			console.error('Failed to switch camera:', error);
+			// Switch back to the original mode.
+			currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+			try {
+				video = await getWebcamStream(currentFacingMode);
+				outputCanvas.width = video.videoWidth;
+				outputCanvas.height = video.videoHeight;
+				shader.updateTextures({ u_webcam: video });
+			} catch (fallbackError) {
+				console.error('Camera switching failed completely:', fallbackError);
+			}
+		}
 	}
 
 	document.addEventListener('keydown', e => {
@@ -90,9 +101,6 @@ async function main() {
 				break;
 			case 's':
 				shader.save('cutup');
-				break;
-			case 'c':
-				switchCamera();
 				break;
 		}
 	});
