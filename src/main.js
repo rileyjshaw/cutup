@@ -25,6 +25,7 @@ async function getWebcamStream(deviceId = null) {
 		const stream = await navigator.mediaDevices.getUserMedia(constraints);
 		video.srcObject = stream;
 		await new Promise(resolve => (video.onloadedmetadata = resolve));
+		document.body.appendChild(video);
 	} catch (error) {
 		console.error('Error accessing webcam:', error);
 		throw error;
