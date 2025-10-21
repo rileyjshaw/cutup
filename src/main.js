@@ -98,7 +98,7 @@ async function main() {
 
 	handleTouch(document.body, (direction, diff) => {
 		if (direction === 'x') {
-			nPasses = Math.max(1, Math.min(8, nPasses + Math.sign(diff) / 16));
+			nPasses = Math.max(1, Math.min(8, nPasses + Math.sign(diff) / 8));
 			shader.updateUniforms({ u_nPasses: nPasses });
 		} else {
 			stripLength = Math.max(MIN_STRIP_LENGTH, stripLength - Math.sign(diff) * 2);
