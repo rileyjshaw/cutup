@@ -2,6 +2,8 @@ import ShaderPad from 'shaderpad';
 import handleTouch from './handleTouch';
 import fragmentShaderSrc from './fragmentShader.glsl';
 
+const MIN_STRIP_LENGTH = 8;
+
 async function getWebcamStream() {
 	const video = document.createElement('video');
 	video.autoplay = video.playsInline = true;
@@ -33,30 +35,23 @@ async function main() {
 	const shader = new ShaderPad(fragmentShaderSrc, { canvas: outputCanvas });
 
 	// State.
-	let gridLength = 2;
 	let stripLength = 100;
 	let isPlaying = true;
 
-	shader.initializeUniform('u_gridLength', 'float', gridLength);
+	shader.initializeUniform('u_gridLength', 'float', 2);
 	shader.initializeUniform('u_stripLength', 'float', stripLength);
 	shader.initializeTexture('u_webcam', video);
 
 	document.addEventListener('keydown', e => {
 		switch (e.key) {
 			case 'ArrowUp':
-				++gridLength;
-				shader.updateUniforms({ u_gridLength: gridLength });
-				break;
-			case 'ArrowDown':
-				gridLength = Math.max(2, gridLength - 1);
-				shader.updateUniforms({ u_gridLength: gridLength });
-				break;
 			case 'ArrowRight':
 				stripLength += 2;
 				shader.updateUniforms({ u_stripLength: stripLength });
 				break;
+			case 'ArrowDown':
 			case 'ArrowLeft':
-				stripLength = Math.max(8, stripLength - 2);
+				stripLength = Math.max(MIN_STRIP_LENGTH, stripLength - 2);
 				shader.updateUniforms({ u_stripLength: stripLength });
 				break;
 			case ' ':
@@ -70,13 +65,8 @@ async function main() {
 	});
 
 	handleTouch(document.body, (direction, diff) => {
-		if (direction === 'x') {
-			stripLength = Math.max(4, stripLength + Math.sign(diff));
-			shader.updateUniforms({ u_stripLength: stripLength });
-		} else {
-			gridLength = Math.max(2, gridLength - Math.sign(diff));
-			shader.updateUniforms({ u_gridLength: gridLength });
-		}
+		stripLength = Math.max(MIN_STRIP_LENGTH, stripLength + Math.sign(diff) * 2 * (direction === 'x' ? 1 : -1));
+		shader.updateUniforms({ u_stripLength: stripLength });
 	});
 
 	function play() {
