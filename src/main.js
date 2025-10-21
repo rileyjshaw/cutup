@@ -20,7 +20,10 @@ async function getWebcamStream(facingMode = 'user') {
 
 	try {
 		const constraints = {
-			video: facingMode ? { facingMode } : true,
+			video: {
+				facingMode,
+				width: 3840,
+			},
 		};
 		const stream = await navigator.mediaDevices.getUserMedia(constraints);
 		video.srcObject = stream;
