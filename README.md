@@ -6,6 +6,7 @@
 -   Arrow/swipe down/left: Decrease number of subdivisions.
 -   Space: Pause/play webcam feed.
 -   s: Save the current frame as a PNG.
+-   Double-tap on mobile: switch camera.
 
 ## Credit
 
