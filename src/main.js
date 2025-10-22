@@ -2,7 +2,7 @@ import ShaderPad from 'shaderpad';
 import handleTouch from './handleTouch';
 import fragmentShaderSrc from './fragmentShader.glsl';
 
-const MIN_STRIP_LENGTH = 2;
+const MIN_N_STRIPS = 2;
 const MAX_N_PASSES = 8;
 const MAX_EXPORT_DIMENSION = 6000;
 
@@ -14,7 +14,7 @@ async function getWebcamStream(facingMode = 'user') {
 		const constraints = {
 			video: {
 				facingMode,
-				width: 3840,
+				width: 4096,
 			},
 		};
 		const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -32,7 +32,7 @@ async function main() {
 	// State.
 	let currentFacingMode = 'user'; // Selfie camera.
 	let video = await getWebcamStream(currentFacingMode);
-	let stripLength = 32;
+	let nStrips = 32;
 	let nPasses = 1;
 	let isPlaying = true;
 
@@ -51,7 +51,7 @@ async function main() {
 	const [displayShader, exportShader] = [displayCanvas, exportCanvas].map(canvas => {
 		const shader = new ShaderPad(fragmentShaderSrc, { canvas });
 		shader.initializeUniform('u_nPasses', 'int', nPasses);
-		shader.initializeUniform('u_stripLength', 'float', stripLength);
+		shader.initializeUniform('u_nStrips', 'float', nStrips);
 		shader.initializeTexture('u_webcam', video);
 		return shader;
 	});
@@ -78,7 +78,7 @@ async function main() {
 		exportCanvas.width = exportWidth;
 		exportCanvas.height = exportHeight;
 
-		exportShader.updateUniforms({ u_nPasses: nPasses, u_stripLength: stripLength });
+		exportShader.updateUniforms({ u_nPasses: nPasses, u_nStrips: nStrips });
 		exportShader.updateTextures({ u_webcam: video });
 		document.body.appendChild(exportCanvas);
 		setTimeout(() => {
@@ -107,12 +107,12 @@ async function main() {
 	document.addEventListener('keydown', e => {
 		switch (e.key) {
 			case 'ArrowUp':
-				stripLength += 2;
-				displayShader.updateUniforms({ u_stripLength: stripLength });
+				nStrips += 2;
+				displayShader.updateUniforms({ u_nStrips: nStrips });
 				break;
 			case 'ArrowDown':
-				stripLength = Math.max(MIN_STRIP_LENGTH, stripLength - 2);
-				displayShader.updateUniforms({ u_stripLength: stripLength });
+				nStrips = Math.max(MIN_N_STRIPS, nStrips - 2);
+				displayShader.updateUniforms({ u_nStrips: nStrips });
 				break;
 			case 'ArrowRight':
 				nPasses = Math.min(MAX_N_PASSES, nPasses + 1);
@@ -142,8 +142,8 @@ async function main() {
 			nPasses = Math.max(1, Math.min(8, nPasses + Math.sign(diff) / 8));
 			displayShader.updateUniforms({ u_nPasses: nPasses });
 		} else {
-			stripLength = Math.max(MIN_STRIP_LENGTH, stripLength - Math.sign(diff) * 2);
-			displayShader.updateUniforms({ u_stripLength: stripLength });
+			nStrips = Math.max(MIN_N_STRIPS, nStrips - Math.sign(diff) * 2);
+			displayShader.updateUniforms({ u_nStrips: nStrips });
 		}
 	});
 
