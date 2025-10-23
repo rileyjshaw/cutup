@@ -55,7 +55,7 @@ async function main() {
 		return shader;
 	});
 
-	async function exportHighRes() {
+	function exportHighRes() {
 		const scaleFactor = Math.pow(2, nPasses);
 		let exportWidth = video.videoWidth * scaleFactor;
 		let exportHeight = video.videoHeight * scaleFactor;
@@ -75,9 +75,12 @@ async function main() {
 
 		exportShader.updateUniforms({ u_nPasses: nPasses, u_nStrips: nStrips });
 		exportShader.updateTextures({ u_webcam: video });
-		exportShader.step(0);
-		await new Promise(resolve => setTimeout(resolve, 8));
-		await exportShader.save('cutup');
+		document.body.appendChild(exportCanvas);
+		setTimeout(() => {
+			exportShader.step(0);
+			exportShader.save('cutup');
+			document.body.removeChild(exportCanvas);
+		}, 8);
 	}
 
 	async function switchCamera() {
