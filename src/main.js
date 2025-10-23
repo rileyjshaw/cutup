@@ -55,7 +55,7 @@ async function main() {
 		return shader;
 	});
 
-	function exportHighRes() {
+	async function exportHighRes() {
 		const scaleFactor = Math.pow(2, nPasses);
 		let exportWidth = video.videoWidth * scaleFactor;
 		let exportHeight = video.videoHeight * scaleFactor;
@@ -76,9 +76,8 @@ async function main() {
 		exportShader.updateUniforms({ u_nPasses: nPasses, u_nStrips: nStrips });
 		exportShader.updateTextures({ u_webcam: video });
 		exportShader.step(0);
-		setTimeout(() => {
-			exportShader.save('cutup');
-		}, 8);
+		await new Promise(resolve => setTimeout(resolve, 8));
+		await exportShader.save('cutup');
 	}
 
 	async function switchCamera() {
@@ -121,8 +120,7 @@ async function main() {
 		}
 	});
 
-	shutter.addEventListener('click', e => {
-		e.preventDefault();
+	shutter.addEventListener('click', () => {
 		exportHighRes();
 	});
 
@@ -139,7 +137,7 @@ async function main() {
 
 	// Double-tap to switch camera.
 	let lastTapTime = 0;
-	document.body.addEventListener('touchend', e => {
+	document.body.addEventListener('touchend', () => {
 		const currentTime = Date.now();
 		if (currentTime - lastTapTime < 300) {
 			switchCamera();
