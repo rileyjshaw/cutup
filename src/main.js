@@ -4,7 +4,7 @@ import fragmentShaderSrc from './fragmentShader.glsl';
 
 const MIN_N_STRIPS = 2;
 const MAX_N_PASSES = 8;
-const MAX_EXPORT_DIMENSION = 6000;
+const MAX_EXPORT_DIMENSION = 3840;
 
 async function getWebcamStream(facingMode = 'user') {
 	const video = document.createElement('video');
@@ -14,7 +14,7 @@ async function getWebcamStream(facingMode = 'user') {
 		const constraints = {
 			video: {
 				facingMode,
-				width: 4096,
+				width: 3840,
 			},
 		};
 		const stream = await navigator.mediaDevices.getUserMedia(constraints);
