@@ -56,6 +56,7 @@ async function main() {
 	});
 
 	function exportHighRes() {
+		displayShader.pause();
 		const scaleFactor = Math.pow(2, nPasses);
 		let exportWidth = video.videoWidth * scaleFactor;
 		let exportHeight = video.videoHeight * scaleFactor;
@@ -76,10 +77,11 @@ async function main() {
 		exportShader.updateUniforms({ u_nPasses: nPasses, u_nStrips: nStrips });
 		exportShader.updateTextures({ u_webcam: video });
 		document.body.appendChild(exportCanvas);
-		setTimeout(() => {
+		setTimeout(async () => {
 			exportShader.step(0);
-			exportShader.save('cutup');
+			await exportShader.save('cutup');
 			document.body.removeChild(exportCanvas);
+			play();
 		}, 8);
 	}
 
@@ -148,9 +150,12 @@ async function main() {
 		lastTapTime = currentTime;
 	});
 
-	displayShader.play(() => {
-		displayShader.updateTextures({ u_webcam: video });
-	});
+	function play() {
+		displayShader.play(() => {
+			displayShader.updateTextures({ u_webcam: video });
+		});
+	}
+	play();
 }
 
 document.addEventListener('DOMContentLoaded', main);
