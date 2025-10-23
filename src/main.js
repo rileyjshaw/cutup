@@ -34,7 +34,6 @@ async function main() {
 	let video = await getWebcamStream(currentFacingMode);
 	let nStrips = 32;
 	let nPasses = 1;
-	let isPlaying = true;
 
 	const app = document.getElementById('app');
 	const shutter = document.querySelector('#shutter button');
@@ -57,15 +56,12 @@ async function main() {
 	});
 
 	function exportHighRes() {
-		const baseWidth = video.videoWidth;
-		const baseHeight = video.videoHeight;
 		const scaleFactor = Math.pow(2, nPasses);
-
-		let exportWidth = baseWidth * scaleFactor;
-		let exportHeight = baseHeight * scaleFactor;
+		let exportWidth = video.videoWidth * scaleFactor;
+		let exportHeight = video.videoHeight * scaleFactor;
 
 		if (exportWidth > MAX_EXPORT_DIMENSION || exportHeight > MAX_EXPORT_DIMENSION) {
-			const aspectRatio = baseWidth / baseHeight;
+			const aspectRatio = exportWidth / exportHeight;
 			if (exportWidth > exportHeight) {
 				exportWidth = MAX_EXPORT_DIMENSION;
 				exportHeight = Math.round(MAX_EXPORT_DIMENSION / aspectRatio);
@@ -74,17 +70,14 @@ async function main() {
 				exportWidth = Math.round(MAX_EXPORT_DIMENSION * aspectRatio);
 			}
 		}
-
 		exportCanvas.width = exportWidth;
 		exportCanvas.height = exportHeight;
 
 		exportShader.updateUniforms({ u_nPasses: nPasses, u_nStrips: nStrips });
 		exportShader.updateTextures({ u_webcam: video });
-		document.body.appendChild(exportCanvas);
+		exportShader.step(0);
 		setTimeout(() => {
-			exportShader.step(0);
 			exportShader.save('cutup');
-			document.body.removeChild(exportCanvas);
 		}, 8);
 	}
 
@@ -122,17 +115,14 @@ async function main() {
 				nPasses = Math.max(1, nPasses - 1);
 				displayShader.updateUniforms({ u_nPasses: nPasses });
 				break;
-			case ' ':
-				isPlaying = !isPlaying;
-				isPlaying ? play() : displayShader.pause();
-				break;
 			case 's':
 				exportHighRes();
 				break;
 		}
 	});
 
-	shutter.addEventListener('click', () => {
+	shutter.addEventListener('click', e => {
+		e.preventDefault();
 		exportHighRes();
 	});
 
@@ -157,12 +147,9 @@ async function main() {
 		lastTapTime = currentTime;
 	});
 
-	function play() {
-		displayShader.play(() => {
-			displayShader.updateTextures({ u_webcam: video });
-		});
-	}
-	play();
+	displayShader.play(() => {
+		displayShader.updateTextures({ u_webcam: video });
+	});
 }
 
 document.addEventListener('DOMContentLoaded', main);
