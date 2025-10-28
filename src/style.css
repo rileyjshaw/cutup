@@ -60,13 +60,12 @@ body {
 	display: none;
 }
 
-canvas.display {
-	position: fixed;
-	inset: 0;
-	z-index: 1;
-	width: 100dvw;
-	height: 100dvh;
+canvas {
 	background: #000;
+}
+
+.flipped canvas {
+	transform: scaleX(-1);
 }
 
 video {
