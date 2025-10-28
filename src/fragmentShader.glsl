@@ -19,13 +19,9 @@ vec2 rearrangeStrips(vec2 uv, vec2 nStrips) {
     return mix((stripUv / 2.0 + localUv) / nStrips, (nStrips - (stripUv + 1.0) / 2.0 + localUv) / nStrips, isOdd);
 }
 
-// Divide the input into a grid of alternating mirrored images.
-vec2 mirror(vec2 uv, float nPasses) {
-    vec2 scaledUv = uv * nPasses;
-    vec2 gridUv = floor(scaledUv);
-    vec2 localUv = fract(scaledUv);
-    vec2 isOdd = mod(gridUv, 2.0);
-    return mix(1.0 - localUv, localUv, isOdd);
+// 0..1..0
+vec2 triangleWave(vec2 xy, float period) {
+    return 1.0 - abs(fract(xy * period) * 2.0 - 1.0);
 }
 
 // Crop the texture to preserve its aspect ratio (object-fit: contain).
@@ -47,8 +43,9 @@ void main() {
         //       but twice as efficient :)
         uv = rearrangeStrips(uv, vec2(u_nStrips, u_nStrips));
     }
-    uv = mirror(uv, pow(2.0, float(u_nPasses)));
+    uv = triangleWave(uv, pow(2.0, float(u_nPasses))); // Mirror with nPasses copies.
     uv = correctAspectRatio(uv, u_resolution, vec2(textureSize(u_webcam, 0)));
+    uv = 1.0 - uv;
 
     fragColor = texture(u_webcam, uv);
 }
