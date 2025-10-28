@@ -42,6 +42,7 @@ const getStepSize = (() => {
 	const stepSizes = new Map();
 	const cycleLengths = new Map();
 	return function getStepSize(nShuffles, nStrips) {
+		nShuffles = Math.floor(nShuffles);
 		if (cycleLengths.has(nStrips)) {
 			nShuffles = nShuffles % cycleLengths.get(nStrips);
 		}
@@ -143,7 +144,7 @@ async function main() {
 	exportCanvas.classList.add('export');
 	const exportShader = new ShaderPad(fragmentShaderSrc, { canvas: exportCanvas });
 	[displayShader, exportShader].forEach(shader => {
-		shader.initializeUniform('u_nShuffles', 'float', nShuffles);
+		shader.initializeUniform('u_nShuffles', 'int', nShuffles);
 		shader.initializeUniform('u_nStrips', 'float', nStrips);
 		shader.initializeUniform('u_stepSize', 'float', stepSize);
 		shader.initializeTexture('u_inputStream', videoInput);
@@ -151,7 +152,7 @@ async function main() {
 
 	function exportHighRes() {
 		displayShader.pause();
-		const scaleFactor = Math.pow(2, nShuffles + 1);
+		const scaleFactor = Math.pow(2, Math.floor(nShuffles) + 1);
 		let exportWidth, exportHeight;
 
 		if (imageInput) {

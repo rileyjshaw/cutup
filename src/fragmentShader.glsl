@@ -4,7 +4,7 @@ precision highp float;
 in vec2 v_uv;
 uniform vec2 u_resolution;
 uniform sampler2D u_inputStream;
-uniform float u_nShuffles;
+uniform int u_nShuffles;
 uniform float u_stepSize;
 uniform float u_nStrips;
 
@@ -57,7 +57,7 @@ void main() {
     // then rearranging the strips. But since we’re operating in UV space, we need to work backwards.
     uv.y = 1.0 - uv.y; // Make the bottoms touch.
     uv = cutup(uv, u_stepSize, vec2(u_nStrips));
-    uv = triangle(uv, vec2(pow(2.0, u_nShuffles - 1.0))); // Mirror with nShuffles copies.
+    uv = triangle(uv, vec2(pow(2.0, float(u_nShuffles - 1)))); // Mirror with nShuffles copies.
     uv = correctAspectRatio(uv, u_resolution, vec2(textureSize(u_inputStream, 0)));
     uv = 1.0 - uv;
     fragColor = texture(u_inputStream, uv);
